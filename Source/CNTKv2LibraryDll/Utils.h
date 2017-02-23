@@ -617,7 +617,7 @@ namespace CNTK
     public:
         Accumulator() : Value(nullptr), m_numUpdates(0) {}
 
-        void Update(const ValuePtr& delta, const DeviceDescriptor& device);
+        void Update(const ValuePtr& delta);
         void Reset();
 
     private:

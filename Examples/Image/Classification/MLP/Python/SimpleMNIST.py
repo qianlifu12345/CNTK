@@ -64,26 +64,27 @@ def simple_mnist():
         label  : reader_train.streams.labels
     }
 
-    lr_per_minibatch=learning_rate_schedule(0.2, UnitType.minibatch)
-    # Instantiate the trainer object to drive the model training
-    trainer = Trainer(z, (ce, pe), sgd(z.parameters, lr=lr_per_minibatch))
-
-    # Get minibatches of images to train with and perform model training
+    # Training config
     minibatch_size = 64
     num_samples_per_sweep = 60000
     num_sweeps_to_train_with = 10
-    #training_progress_output_freq = 100
 
+    #training_progress_output_freq = 100
     progress_printer = ProgressPrinter(
         #freq=training_progress_output_freq,
         tag='Training',
         num_epochs=num_sweeps_to_train_with)
 
+    lr_per_minibatch=learning_rate_schedule(0.2, UnitType.minibatch)
+
+    # Instantiate the trainer object to drive the model training
+    trainer = Trainer(z, (ce, pe), sgd(z.parameters, lr=lr_per_minibatch), [progress_printer])
+
+    # Get minibatches of images to train with and perform model training
     session = training_session(
         training_minibatch_source = reader_train,
         trainer = trainer,
         mb_size_schedule = minibatch_size_schedule(minibatch_size),
-        progress_printer = progress_printer,
         model_inputs_to_mb_source_mapping = input_map,
         progress_frequency = num_samples_per_sweep,
         max_training_samples = num_samples_per_sweep * num_sweeps_to_train_with)

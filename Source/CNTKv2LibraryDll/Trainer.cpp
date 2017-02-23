@@ -160,7 +160,7 @@ namespace CNTK
         const ValuePtr& aggregateEvalCriterionValue = outputs[m_aggregatedEvaluationFunction];
         sampleCount = GetSampleCount(m_testSampleCountVar, outputs[m_testSampleCountVar]);
 
-        UpdateTestProgress(sampleCount, aggregateEvalCriterionValue, computeDevice);
+        UpdateTestProgress(sampleCount, aggregateEvalCriterionValue);
 
         // TODO: it is not optimal to return average evaluation after each minibatch, since it potentially requires a
         // roundtrip to GPU. A better approach would be to have a separate method to return the average evaluation on
@@ -184,7 +184,7 @@ namespace CNTK
 
         // TODO: exclude updating progress writers from profiling?
         UpdateTrainingProgress(m_prevMinibatchNumSamples, m_prevMinibatchAggregateTrainingLossValue,
-                               m_prevMinibatchAggregateEvalCriterionValue, computeDevice);
+                               m_prevMinibatchAggregateEvalCriterionValue);
         return result;
     }
 
@@ -204,7 +204,7 @@ namespace CNTK
 
         // TODO: exclude updating progress writers from profiling?
         UpdateTrainingProgress(m_prevMinibatchNumSamples, m_prevMinibatchAggregateTrainingLossValue,
-                               m_prevMinibatchAggregateEvalCriterionValue, computeDevice);
+                               m_prevMinibatchAggregateEvalCriterionValue);
         return result;
     }
 
@@ -266,19 +266,18 @@ namespace CNTK
         return updated;
     }
 
-    void Trainer::UpdateTrainingProgress(size_t numSamples, const ValuePtr& loss, const ValuePtr& evalCriterion,
-                                         const DeviceDescriptor& computeDevice)
+    void Trainer::UpdateTrainingProgress(size_t numSamples, const ValuePtr& loss, const ValuePtr& evalCriterion)
     {
         if (numSamples == 0)
         {
             return;
         }
 
-        m_aggregatedTrainingLossValue->Update(loss, computeDevice);
+        m_aggregatedTrainingLossValue->Update(loss);
      
         if (m_aggregatedTrainingEvalCriterionValue)
         {
-            m_aggregatedTrainingEvalCriterionValue->Update(evalCriterion, computeDevice);
+            m_aggregatedTrainingEvalCriterionValue->Update(evalCriterion);
         }
 
         for (auto& progressWriter : m_progressWriters)
@@ -302,7 +301,7 @@ namespace CNTK
         }
     }
 
-    void Trainer::UpdateTestProgress(size_t numSamples, const ValuePtr& evalCriterion, const DeviceDescriptor& computeDevice)
+    void Trainer::UpdateTestProgress(size_t numSamples, const ValuePtr& evalCriterion)
     {
         if (numSamples == 0)
         {
@@ -311,7 +310,7 @@ namespace CNTK
 
         if (m_aggregatedTestEvalCriterionValue)
         {
-            m_aggregatedTestEvalCriterionValue->Update(evalCriterion, computeDevice);
+            m_aggregatedTestEvalCriterionValue->Update(evalCriterion);
         }
 
         for (auto& progressWriter : m_progressWriters)

@@ -82,7 +82,9 @@ def train(reader, model, max_epochs, model_dir=None):
                                     low_memory=True,
                                     gradient_clipping_threshold_per_sample=15, gradient_clipping_with_truncation=True)
 
-    trainer = cntk.Trainer(z, (ce, pe), [learner])
+    progress_printer = cntk.ProgressPrinter(freq=100, first=10, tag='Training', num_epochs=max_epochs) # more detailed logging
+    #progress_printer = ProgressPrinter(tag='Training', num_epochs=max_epochs)
+    trainer = cntk.Trainer(z, (ce, pe), [learner], [progress_printer])
 
     # define mapping from reader streams to network inputs
     input_map = {
@@ -92,22 +94,30 @@ def train(reader, model, max_epochs, model_dir=None):
 
     # process minibatches and perform model training
     cntk.utils.log_number_of_parameters(z) ; print()
-    progress_printer = cntk.ProgressPrinter(freq=100, first=10, tag='Training', num_epochs=max_epochs) # more detailed logging
-    #progress_printer = ProgressPrinter(tag='Training', num_epochs=max_epochs)
 
     t = 0
+    aggregate_loss = 0
+    aggregate_error = 0
+    total_samples = 0
 
     # loop over epochs
     for epoch in range(max_epochs):
         epoch_end = (epoch+1) * epoch_size
+
+        aggregate_loss = 0
+        aggregate_error = 0
+        total_samples = 0
 
         # loop over minibatches on the epoch
         while t < epoch_end:
             # BUGBUG? The change of minibatch_size parameter vv has no effect.
             data = reader.next_minibatch(min(minibatch_size, epoch_end-t), input_map=input_map) # fetch minibatch
             trainer.train_minibatch(data)                                   # update model with it
-            t += trainer.previous_minibatch_sample_count                    # count samples processed so far
-            progress_printer.update_with_trainer(trainer, with_metric=True) # log progress
+            samples = trainer.previous_minibatch_sample_count
+            t += samples
+            total_samples += samples
+            aggregate_loss += trainer.previous_minibatch_loss_average * samples
+            aggregate_error += trainer.previous_minibatch_evaluation_average * samples
 
             #def trace_node(name):
             #    nl = [n for n in z.parameters if n.name() == name]
@@ -117,9 +127,9 @@ def train(reader, model, max_epochs, model_dir=None):
             #trace_node('stabilizer_param')
         if model_dir:
             z.save(os.path.join(model_dir, "atis" + "_{}.dnn".format(epoch)))
-        loss, metric, actual_samples = progress_printer.epoch_summary(with_metric=True)
+        trainer.summarize_training_progress()
 
-    return loss, metric
+    return aggregate_loss / total_samples, aggregate_error / total_samples
 
 
 #############################

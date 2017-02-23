@@ -4229,8 +4229,8 @@ namespace CNTK
 
         void Save(const std::wstring& modelFilePath, const std::vector<DictionaryValue>& learnerState, const Dictionary& externalState);
 
-        void UpdateTrainingProgress(size_t numSamples, const ValuePtr& loss, const ValuePtr& evalCriterion, const DeviceDescriptor& computeDevice);
-        void UpdateTestProgress(size_t numSamples, const ValuePtr& evalCriterion, const DeviceDescriptor& computeDevice);
+        void UpdateTrainingProgress(size_t numSamples, const ValuePtr& loss, const ValuePtr& evalCriterion);
+        void UpdateTestProgress(size_t numSamples, const ValuePtr& evalCriterion);
         void AddProgressWriters(const std::vector<ProgressWriterPtr>& progressWriters);
 
         FunctionPtr m_combinedTrainingFunction;

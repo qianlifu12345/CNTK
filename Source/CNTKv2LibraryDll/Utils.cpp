@@ -894,7 +894,7 @@ namespace CNTK
     template ValuePtr Utils::GetValueObjectFromCNTKImplMatrixAndMBLayout<float>(const Variable& var, const Matrix<float>& matrix, const MBLayoutPtr& layout, bool readOnly /*= true*/);
     template ValuePtr Utils::GetValueObjectFromCNTKImplMatrixAndMBLayout<double>(const Variable& var, const Matrix<double>& matrix, const MBLayoutPtr& layout, bool readOnly /*= true*/);
 
-    void Accumulator::Update(const ValuePtr& delta, const DeviceDescriptor& device)
+    void Accumulator::Update(const ValuePtr& delta)
     {
         if (!delta)
         {
@@ -905,11 +905,11 @@ namespace CNTK
         if (!Data() ||
             GetDataType() != delta->GetDataType() ||
             Shape() != delta->Shape() ||
-            Device() != device ||
+            Device() != delta->Device() ||
             Mask() != delta->Mask())
         {
             copied = true;
-            m_data = MakeSharedObject<NDArrayView>(delta->GetDataType(), delta->Shape(), device);
+            m_data = MakeSharedObject<NDArrayView>(delta->GetDataType(), delta->Shape(), delta->Device());
             m_mask = delta->Mask();
             ResetToZero();
         }
